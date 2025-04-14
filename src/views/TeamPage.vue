@@ -10,7 +10,8 @@
           @click="goToTeam(team)"
           :class="[
             'cursor-pointer px-2 py-1 rounded',
-            currentTeam === team ? 'bg-green-600' : 'hover:bg-gray-700'
+
+            currentTeam === team ? 'bg-purple-600' : 'hover:bg-gray-700'
           ]"
         >
           {{ team }}
@@ -27,19 +28,42 @@
       </button>
     </aside>
 
-    <!-- Team Content -->
-    <main class="flex-1 flex flex-col items-center justify-center text-center px-4">
-      <h1 class="text-4xl font-bold mb-4">{{ currentTeam }}</h1>
-      <p class="text-gray-400 mb-4">
-        This is the future stat and news hub for the {{ currentTeam }}.
-      </p>
+    <!-- Main Content -->
+    <main class="flex-1 p-10 text-center">
+      <div v-if="teamInfo">
+        <img
+          v-if="teamInfo.strTeamBadge"
+          :src="teamInfo.strTeamBadge"
+          alt="Team Logo"
+          class="w-32 mb-6 mx-auto"
+        />
 
-      <button
-        class="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded"
-        @click="addFavoriteGame"
-      >
-        ❤️ Favorite This Game
-      </button>
+        <h1 class="text-4xl font-bold mb-2">{{ teamInfo.strTeam }}</h1>
+        <p class="text-gray-400 mb-1">League: {{ teamInfo.strLeague }}</p>
+        <p class="text-gray-400 mb-1">Stadium: {{ teamInfo.strStadium }}</p>
+        <p class="text-gray-400 mb-4">
+          Location: {{ teamInfo.strStadiumLocation || 'Not available' }}
+        </p>
+        <p class="text-sm text-gray-300 leading-relaxed">
+          {{
+            teamInfo.strDescriptionEN?.length > 300
+              ? teamInfo.strDescriptionEN.slice(0, 300) + '...'
+              : teamInfo.strDescriptionEN
+          }}
+        </p>
+
+        <button
+          class="mt-6 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded"
+          @click="addFavoriteGame"
+        >
+          ❤️ Favorite This Game
+        </button>
+      </div>
+
+      <div v-else class="text-gray-400 mt-20">
+        <p>Loading team data or team not found.</p>
+      </div>
+>>>>>>> 7cf5367 (Add API-powered TeamPage.vue with sidebar + favorites)
     </main>
   </div>
 </template>
@@ -55,6 +79,7 @@ const router = useRouter()
 
 const currentTeam = ref(route.params.teamName || '')
 const teamList = ref([])
+const teamInfo = ref(null)
 
 const goToTeam = (teamName) => {
   router.push(`/team/${teamName}`)
@@ -66,56 +91,58 @@ const fetchTeams = async () => {
     router.push('/login')
     return
   }
+  const userRef = doc(db, 'users', user.uid)
+  const userSnap = await getDoc(userRef)
 
-  try {
-    const userRef = doc(db, 'users', user.uid)
-    const userSnap = await getDoc(userRef)
+  if (userSnap.exists()) {
+    const teams = userSnap.data().favoriteTeams || {}
+    teamList.value = Object.values(teams)
 
-    if (userSnap.exists()) {
-      const teams = userSnap.data().favoriteTeams || {}
-      teamList.value = Object.values(teams)
-
-      if (!teamList.value.includes(currentTeam.value)) {
-        currentTeam.value = teamList.value[0] || ''
-        if (currentTeam.value) {
-          router.push(`/team/${currentTeam.value}`)
-        }
+    if (!teamList.value.includes(currentTeam.value)) {
+      currentTeam.value = teamList.value[0] || ''
+      if (currentTeam.value) {
+        router.push(`/team/${currentTeam.value}`)
       }
-    } else {
-      alert('User not found.')
-      router.push('/create-profile')
     }
+
+    await fetchTeamInfo(currentTeam.value)
+  } else {
+    router.push('/create-profile')
+  }
+}
+
+const fetchTeamInfo = async (teamName) => {
+  try {
+    const url = `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`
+    const res = await fetch(url)
+    const data = await res.json()
+    teamInfo.value = data.teams ? data.teams[0] : null
   } catch (err) {
-    console.error('❌ Error loading teams:', err)
-    alert('Failed to load teams.')
+    console.error('Error fetching API data:', err)
+    teamInfo.value = null
   }
 }
 
 const addFavoriteGame = async () => {
   const user = auth.currentUser
-  if (!user) {
-    alert('Please log in to favorite games.')
-    return
-  }
+  if (!user) return alert('Login required.')
 
   try {
     const userRef = doc(db, 'users', user.uid)
     await updateDoc(userRef, {
-      favorites: arrayUnion({
-        team: currentTeam.value,
-        timestamp: Date.now(),
-      })
+      favoriteGames: arrayUnion(currentTeam.value)
     })
-    alert('Game favorited!')
+    alert(`✅ Favorited ${currentTeam.value}`)
   } catch (err) {
-    console.error('❌ Failed to add favorite:', err)
-    alert('Could not favorite game.')
+    console.error(err)
+    alert('❌ Failed to favorite game')
   }
 }
 
 onMounted(fetchTeams)
 
-watch(() => route.params.teamName, (newTeam) => {
+watch(() => route.params.teamName, async (newTeam) => {
   currentTeam.value = newTeam
+  await fetchTeamInfo(newTeam)
 })
 </script>
