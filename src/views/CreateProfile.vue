@@ -52,9 +52,10 @@
   
   // Team options (hardcoded)
   const teamsBySport = {
-    Basketball: ['Lakers', 'Warriors', 'Celtics', 'Bulls'],
-    Football: ['Cowboys', 'Chiefs', 'Eagles', 'Packers'],
-    Baseball: ['Yankees', 'Dodgers', 'Red Sox', 'Braves'],
+     Basketball: ['Lakers', 'Warriors', 'Celtics', 'Bulls', 'Thunder','Mavericks','Nuggets','Rockets','Timberwolves','Knicks','Clippers','Heat','Cavaliers','Grizzlies','Bucks','Suns','Pistons','Kings','Spurs','76ers','Raptors','Pelicans','Pacers','Hawks','Wizards','Hornets','Nets','Magic','Jazz'],
+
+    Football: ['Cowboys', 'Chiefs', 'Eagles', 'Packers','Cardinals','Falcons','Ravens','Bills','Panthers','Bears','Bengals','Browns','Broncos','Lions','Texans','Colts','Jaguars','Rams','Vikings','Saints','Giants','49ers','Seahawks','Buccaneers','Commanders','Raiders','Chargers','Dolphins','Patriots','Jets','Steelers','Titans'],
+    Baseball: ['Yankees', 'Dodgers', 'Red Sox', 'Braves','Diamond Backs','Athletics','Orioles','Cubs','White Sox','Reds','Guardians','Rockies','Tigers','Astros','Royals','Angels','Marlins','Cardinals','Rays','Rangers','Blue Jays','Nationals'],
   }
   
   const selectedSports = ref([])
