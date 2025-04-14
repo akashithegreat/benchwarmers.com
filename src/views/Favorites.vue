@@ -20,10 +20,9 @@
           :key="index"
           class="bg-gray-800 p-4 rounded shadow"
         >
-          <h2 class="text-xl font-semibold">{{ fav.team }}</h2>
-          <p class="text-sm text-gray-400">
-            Favorited on: {{ formatDate(fav.timestamp) }}
-          </p>
+          <h2 class="text-xl font-semibold">{{ fav.team }} vs {{ fav.opponent }}</h2>
+          <p class="text-sm text-gray-400">Game Date: {{ fav.date }}</p>
+          <p class="text-sm text-gray-500">Favorited: {{ formatDate(fav.favoritedAt) }}</p>
         </li>
       </ul>
     </div>
@@ -58,7 +57,7 @@
       const userSnap = await getDoc(userRef)
   
       if (userSnap.exists()) {
-        favorites.value = userSnap.data().favorites || []
+        favorites.value = userSnap.data().favoriteGames || []
       } else {
         alert('User profile not found.')
       }
