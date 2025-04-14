@@ -2,128 +2,57 @@
   <div class="min-h-screen flex bg-black text-white">
     <!-- Sidebar -->
     <aside class="w-48 bg-gray-800 p-4">
-  <h2 class="text-lg font-semibold mb-4">Your Teams</h2>
-  <ul class="space-y-2">
-    <li
-      v-for="team in teamList"
-      :key="team"
-      @click="goToTeam(team)"
-      :class="[
-        'cursor-pointer px-2 py-1 rounded',
-        currentTeam === team ? 'bg-purple-600' : 'hover:bg-gray-700'
-      ]"
-    >
-      {{ team }}
-    </li>
-  </ul>
-
-  <hr class="my-4 border-gray-600" />
-
-  <button
-    class="w-full text-left px-2 py-1 rounded hover:bg-gray-700 mb-2"
-    @click="router.push('/favorites')"
-  >
-    ⭐ Favorites
-  </button>
-
-  <button
-    class="w-full text-left px-2 py-1 rounded hover:bg-gray-700"
-    @click="toggleGames"
-  >
-    📅 {{ showGames ? 'Hide' : 'Show' }} Games
-  </button>
-</aside>
-
+      <h2 class="text-lg font-semibold mb-4">Your Teams</h2>
+      <ul class="space-y-2">
+        <li
+          v-for="team in teamList"
+          :key="team"
+          @click="goToTeam(team)"
+          :class="[
+            'cursor-pointer px-2 py-1 rounded',
+            currentTeam === team ? 'bg-green-600' : 'hover:bg-gray-700'
+          ]"
+        >
+          {{ team }}
+        </li>
+      </ul>
+      <hr class="my-4 border-gray-600" />
+      <button
+        class="w-full text-left px-2 py-1 rounded hover:bg-gray-700"
+        @click="router.push('/favorites')"
+      >
+        ⭐ Favorites
+      </button>
+    </aside>
 
     <!-- Main Content -->
     <main class="flex-1 p-10 text-center">
-      <div v-if="teamInfo">
-        <img
-          v-if="teamInfo.strTeamBadge"
-          :src="teamInfo.strTeamBadge"
-          alt="Team Logo"
-          class="w-32 mb-6 mx-auto"
-        />
+      <div v-if="teamData">
+        <img :src="teamData.logo" alt="Team Logo" class="w-32 mb-6 mx-auto" />
+        <h1 class="text-4xl font-bold mb-2">{{ teamData.displayName }}</h1>
 
-        <h1 class="text-4xl font-bold mb-2">{{ teamInfo.strTeam }}</h1>
-        <p class="text-gray-400 mb-1">League: {{ teamInfo.strLeague }}</p>
-        <p class="text-gray-400 mb-1">Stadium: {{ teamInfo.strStadium }}</p>
-        <p class="text-gray-400 mb-4">
-          Location: {{ teamInfo.strStadiumLocation || 'Not available' }}
-        </p>
-        <p class="text-sm text-gray-300 leading-relaxed mb-6">
-          {{
-            teamInfo.strDescriptionEN?.length > 300
-              ? teamInfo.strDescriptionEN.slice(0, 300) + '...'
-              : teamInfo.strDescriptionEN
-          }}
-        </p>
-
-        <div class="space-x-4 mb-6">
-          <button
-            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded"
-            @click="addFavoriteGame"
-          >
-            ❤️ Favorite This Game
-          </button>
-          <button
-            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
-            @click="toggleGames"
-          >
-            📅 {{ showGames ? 'Hide' : 'Show' }} Upcoming Games
-          </button>
-        </div>
-
-        <div v-if="showGames && upcomingGames.length" class="mt-8 text-left max-w-2xl mx-auto space-y-4">
-          <h2 class="text-2xl font-semibold mb-4 text-center">Upcoming Games</h2>
-          <div
-            v-for="(game, index) in upcomingGames"
-            :key="index"
-            class="bg-gray-800 p-4 rounded"
-          >
-            <p class="text-lg font-semibold">{{ game.strEvent }}</p>
-            <p class="text-sm text-gray-400">
-              {{ formatDateTime(game.dateEvent, game.strTime) }}
-            </p>
-            <p class="text-sm text-gray-400">
-              Venue: {{ game.strVenue || 'TBD' }}
-            </p>
-          </div>
-        </div>
-
-        <div v-else-if="showGames && !upcomingGames.length" class="text-gray-400 mt-10">
-          <p>No upcoming games found.</p>
-        </div>
-      </div>
-
-      <div v-else class="text-gray-400 mt-20">
-        <p>Loading team data or team not found.</p>
-      </div>
-      <div class="mt-12 max-w-2xl mx-auto text-left">
-  <h2 class="text-2xl font-semibold mb-4">💬 Team Chat</h2>
-  <div class="bg-gray-800 p-4 rounded h-64 overflow-y-auto mb-4">
-    <div v-for="(msg, index) in chatMessages" :key="index" class="mb-2">
-      <span class="font-semibold text-purple-400">{{ msg.username || 'Anonymous' }}:</span>
-      <span>{{ msg.text }}</span>
+        <div class="mt-6">
+          <h2 class="text-xl font-semibold mb-4">Upcoming Games</h2>
+          <ul class="space-y-2 text-gray-300">
+            <li v-for="(event, index) in teamData.schedule" :key="index" class="mb-4">
+  <div class="flex justify-between items-center bg-gray-800 p-3 rounded">
+    <div class="text-left">
+      <div class="text-lg font-semibold">{{ event.opponent }}</div>
+      <div class="text-sm text-gray-400">{{ event.date }}</div>
     </div>
-  </div>
-
-  <form @submit.prevent="sendMessage" class="flex gap-2">
-    <input
-      v-model="newMessage"
-      type="text"
-      placeholder="Type your message..."
-      class="flex-1 px-3 py-2 rounded bg-gray-700 text-white focus:outline-none"
-    />
     <button
-      type="submit"
-      class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded"
+      class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm font-semibold"
+      @click="addFavoriteGame(event)"
     >
-      Send
+      ❤️ Favorite
     </button>
-  </form>
-</div>
-
+  </div>
+</li>
+          </ul>
+        </div>
+      </div>
+      <div v-else class="text-gray-400 mt-20">Loading ESPN data or team not found...</div>
+      <TeamChat :teamName="route.params.teamName" />
     </main>
   </div>
 </template>
@@ -132,144 +61,368 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { auth, db } from '../firebase'
-import { doc, getDoc, updateDoc, arrayUnion, collection, addDoc, serverTimestamp, orderBy, query, onSnapshot } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
+import TeamChat from '../components/TeamChat.vue'
+
 
 const route = useRoute()
 const router = useRouter()
 
 const currentTeam = ref(route.params.teamName || '')
 const teamList = ref([])
-const teamInfo = ref(null)
-const upcomingGames = ref([])
-const showGames = ref(false)
+const teamData = ref(null)
 
-const goToTeam = (teamName) => {
-  router.push(`/team/${teamName}`)
+const espnCodeMap = {
+  // ✅ full NBA, NFL, MLB map
+  "Atlanta Hawks": "ATL", "Boston Celtics": "BOS", "Brooklyn Nets": "BKN", "Charlotte Hornets": "CHA",
+  "Chicago Bulls": "CHI", "Cleveland Cavaliers": "CLE", "Dallas Mavericks": "DAL", "Denver Nuggets": "DEN",
+  "Detroit Pistons": "DET", "Golden State Warriors": "GSW", "Houston Rockets": "HOU", "Indiana Pacers": "IND",
+  "Los Angeles Clippers": "LAC", "Los Angeles Lakers": "LAL", "Memphis Grizzlies": "MEM", "Miami Heat": "MIA",
+  "Milwaukee Bucks": "MIL", "Minnesota Timberwolves": "MIN", "New Orleans Pelicans": "NOP", "New York Knicks": "NYK",
+  "Oklahoma City Thunder": "OKC", "Orlando Magic": "ORL", "Philadelphia 76ers": "PHI", "Phoenix Suns": "PHX",
+  "Portland Trail Blazers": "POR", "Sacramento Kings": "SAC", "San Antonio Spurs": "SAS", "Toronto Raptors": "TOR",
+  "Utah Jazz": "UTA", "Washington Wizards": "WAS",
+  "Arizona Cardinals": "ARI", "Atlanta Falcons": "ATL", "Baltimore Ravens": "BAL", "Buffalo Bills": "BUF",
+  "Carolina Panthers": "CAR", "Chicago Bears": "CHI", "Cincinnati Bengals": "CIN", "Cleveland Browns": "CLE",
+  "Dallas Cowboys": "DAL", "Denver Broncos": "DEN", "Detroit Lions": "DET", "Green Bay Packers": "GB",
+  "Houston Texans": "HOU", "Indianapolis Colts": "IND", "Jacksonville Jaguars": "JAX", "Kansas City Chiefs": "KC",
+  "Las Vegas Raiders": "LV", "Los Angeles Chargers": "LAC", "Los Angeles Rams": "LAR", "Miami Dolphins": "MIA",
+  "Minnesota Vikings": "MIN", "New England Patriots": "NE", "New Orleans Saints": "NO", "New York Giants": "NYG",
+  "New York Jets": "NYJ", "Philadelphia Eagles": "PHI", "Pittsburgh Steelers": "PIT", "San Francisco 49ers": "SF",
+  "Seattle Seahawks": "SEA", "Tampa Bay Buccaneers": "TB", "Tennessee Titans": "TEN", "Washington Commanders": "WSH",
+  "Arizona Diamondbacks": "ARI", "Atlanta Braves": "ATL", "Baltimore Orioles": "BAL", "Boston Red Sox": "BOS",
+  "Chicago White Sox": "CHW", "Chicago Cubs": "CHC", "Cincinnati Reds": "CIN", "Cleveland Guardians": "CLE",
+  "Colorado Rockies": "COL", "Detroit Tigers": "DET", "Houston Astros": "HOU", "Kansas City Royals": "KC",
+  "Los Angeles Angels": "LAA", "Los Angeles Dodgers": "LAD", "Miami Marlins": "MIA", "Milwaukee Brewers": "MIL",
+  "Minnesota Twins": "MIN", "New York Yankees": "NYY", "New York Mets": "NYM", "Oakland Athletics": "OAK",
+  "Philadelphia Phillies": "PHI", "Pittsburgh Pirates": "PIT", "San Diego Padres": "SD", "San Francisco Giants": "SF",
+  "Seattle Mariners": "SEA", "St. Louis Cardinals": "STL", "Tampa Bay Rays": "TB", "Texas Rangers": "TEX",
+  "Toronto Blue Jays": "TOR", "Washington Nationals": "WSH"
 }
 
-const fetchTeams = async () => {
+const getLeagueFromTeam = (teamName) => {
+  const code = espnCodeMap[teamName]
+  if (!code) return null
+
+  const nba = ["LAL", "GSW", "NYK", "BOS", "PHX", "DAL", "MIA", "CHI", "CLE"]
+  const nfl = ["DAL", "BUF", "PHI", "NE", "KC", "NYG", "GB", "SF", "MIN"]
+  const mlb = ["NYY", "LAD", "BOS", "ATL", "HOU", "NYM", "CHC", "PHI"]
+
+  if (nba.includes(code)) return "basketball/nba"
+  if (nfl.includes(code)) return "football/nfl"
+  if (mlb.includes(code)) return "baseball/mlb"
+
+  return null
+}
+
+const fetchEspnTeamData = async (teamName) => {
+  teamData.value = null
+  const code = espnCodeMap[teamName]
+  const league = getLeagueFromTeam(teamName)
+
+  if (!code || !league) return
+
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${league}/teams/${code}`)
+    const data = await res.json()
+
+    const logo = data.team?.logos?.[0]?.href
+    const displayName = data.team?.displayName || teamName
+
+    const schedule = (data.team?.nextEvent || []).map((event) => {
+      const opponent = event.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation !== code)
+      return {
+        date: new Date(event.date).toLocaleString(),
+        opponent: opponent?.team?.displayName || 'Unknown'
+      }
+    })
+
+    teamData.value = {
+      displayName,
+      logo,
+      schedule
+    }
+  } catch (err) {
+    console.error('❌ ESPN API error:', err)
+  }
+}
+
+const fetchTeamList = async () => {
   const user = auth.currentUser
   if (!user) {
     router.push('/login')
     return
   }
+
   const userRef = doc(db, 'users', user.uid)
   const userSnap = await getDoc(userRef)
 
   if (userSnap.exists()) {
     const teams = userSnap.data().favoriteTeams || {}
     teamList.value = Object.values(teams)
-
-    if (!teamList.value.includes(currentTeam.value)) {
-      currentTeam.value = teamList.value[0] || ''
-      if (currentTeam.value) {
-        router.push(`/team/${currentTeam.value}`)
-      }
-    }
-
-    await fetchTeamInfo(currentTeam.value)
   } else {
     router.push('/create-profile')
   }
 }
 
-const fetchTeamInfo = async (teamName) => {
-  try {
-    const url = `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`
-    const res = await fetch(url)
-    const data = await res.json()
-    teamInfo.value = data.teams ? data.teams[0] : null
-
-    // Fetch games after we get team ID
-    if (teamInfo.value?.idTeam) {
-      fetchUpcomingGames(teamInfo.value.idTeam)
-    }
-  } catch (err) {
-    console.error('Error fetching API data:', err)
-    teamInfo.value = null
-  }
+const goToTeam = (teamName) => {
+  router.push(`/team/${teamName}`)
 }
 
-const fetchUpcomingGames = async (teamId) => {
-  try {
-    const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsnext.php?id=${teamId}`)
-    const data = await res.json()
-    upcomingGames.value = data.events || []
-  } catch (err) {
-    console.error('Error fetching games:', err)
-  }
-}
+onMounted(async () => {
+  await fetchTeamList()
+  currentTeam.value = route.params.teamName
+  fetchEspnTeamData(currentTeam.value)
+})
 
-const toggleGames = () => {
-  showGames.value = !showGames.value
-}
+watch(
+  () => route.params.teamName,
+  async (newTeam) => {
+    currentTeam.value = newTeam
+    fetchEspnTeamData(newTeam)
+  },
+  { immediate: true }
+)
+import { updateDoc, arrayUnion } from 'firebase/firestore'
 
-const formatDateTime = (date, time) => {
-  return `${date} at ${time}`
-}
-
-const addFavoriteGame = async () => {
+const addFavoriteGame = async (game) => {
   const user = auth.currentUser
-  if (!user) return alert('Login required.')
+  if (!user) return alert('Please log in to favorite games.')
+
+  const userRef = doc(db, 'users', user.uid)
+
+  const favorite = {
+    team: currentTeam.value,
+    opponent: game.opponent,
+    date: game.date,
+    favoritedAt: new Date().toISOString()
+  }
 
   try {
-    const userRef = doc(db, 'users', user.uid)
     await updateDoc(userRef, {
-      favoriteGames: arrayUnion(currentTeam.value)
+      favoriteGames: arrayUnion(favorite)
     })
-    alert(`✅ Favorited ${currentTeam.value}`)
+    alert('✅ Game added to favorites!')
   } catch (err) {
-    console.error(err)
-    alert('❌ Failed to favorite game')
+    console.error('❌ Error saving favorite:', err)
+    alert('Failed to favorite game.')
   }
 }
-
-onMounted(fetchTeams)
-
-watch(() => route.params.teamName, async (newTeam) => {
-  currentTeam.value = newTeam
-  await fetchTeamInfo(newTeam)
-})
-const chatMessages = ref([])
-const newMessage = ref('')
-
-const loadChatMessages = () => {
-  if (!currentTeam.value) return
-  const messagesRef = collection(db, 'chats', currentTeam.value, 'messages')
-  const q = query(messagesRef, orderBy('timestamp'))
-
-  onSnapshot(q, (snapshot) => {
-    chatMessages.value = snapshot.docs.map(doc => doc.data())
-  })
-}
-
-const sendMessage = async () => {
-  if (!newMessage.value.trim()) return
-
-  const user = auth.currentUser
-  const username = user?.displayName || user?.email || 'Anonymous'
-
-  try {
-    await addDoc(collection(db, 'chats', currentTeam.value, 'messages'), {
-      text: newMessage.value.trim(),
-      username,
-      timestamp: serverTimestamp()
-    })
-    newMessage.value = ''
-  } catch (err) {
-    console.error('Error sending message:', err)
-  }
-}
-watch(() => route.params.teamName, async (newTeam) => {
-  currentTeam.value = newTeam
-  await fetchTeamInfo(newTeam)
-  loadChatMessages()
-})
-
-onMounted(() => {
-  fetchTeams()
-  loadChatMessages()
-})
-
 
 </script>
+
+
+<template>
+  <div class="min-h-screen flex bg-black text-white">
+    <!-- Sidebar -->
+    <aside class="w-48 bg-gray-800 p-4">
+      <h2 class="text-lg font-semibold mb-4">Your Teams</h2>
+      <ul class="space-y-2">
+        <li
+          v-for="team in teamList"
+          :key="team"
+          @click="goToTeam(team)"
+          :class="[
+            'cursor-pointer px-2 py-1 rounded',
+            currentTeam === team ? 'bg-green-600' : 'hover:bg-gray-700'
+          ]"
+        >
+          {{ team }}
+        </li>
+      </ul>
+      <hr class="my-4 border-gray-600" />
+      <button
+        class="w-full text-left px-2 py-1 rounded hover:bg-gray-700"
+        @click="router.push('/favorites')"
+      >
+        ⭐ Favorites
+      </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-10 text-center">
+      <div v-if="teamData">
+        <img :src="teamData.logo" alt="Team Logo" class="w-32 mb-6 mx-auto" />
+        <h1 class="text-4xl font-bold mb-2">{{ teamData.displayName }}</h1>
+
+        <div class="mt-6">
+          <h2 class="text-xl font-semibold mb-4">Upcoming Games</h2>
+          <ul class="space-y-2 text-gray-300">
+            <li v-for="(event, index) in teamData.schedule" :key="index" class="mb-4">
+  <div class="flex justify-between items-center bg-gray-800 p-3 rounded">
+    <div class="text-left">
+      <div class="text-lg font-semibold">{{ event.opponent }}</div>
+      <div class="text-sm text-gray-400">{{ event.date }}</div>
+    </div>
+    <button
+      class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm font-semibold"
+      @click="addFavoriteGame(event)"
+    >
+      ❤️ Favorite
+    </button>
+  </div>
+</li>
+          </ul>
+        </div>
+      </div>
+      <div v-else class="text-gray-400 mt-20">Loading ESPN data or team not found...</div>
+      <TeamChat :teamName="route.params.teamName" />
+    </main>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { auth, db } from '../firebase'
+import { doc, getDoc } from 'firebase/firestore'
+import TeamChat from '../components/TeamChat.vue'
+
+
+const route = useRoute()
+const router = useRouter()
+
+const currentTeam = ref(route.params.teamName || '')
+const teamList = ref([])
+const teamData = ref(null)
+
+const espnCodeMap = {
+  // ✅ full NBA, NFL, MLB map
+  "Atlanta Hawks": "ATL", "Boston Celtics": "BOS", "Brooklyn Nets": "BKN", "Charlotte Hornets": "CHA",
+  "Chicago Bulls": "CHI", "Cleveland Cavaliers": "CLE", "Dallas Mavericks": "DAL", "Denver Nuggets": "DEN",
+  "Detroit Pistons": "DET", "Golden State Warriors": "GSW", "Houston Rockets": "HOU", "Indiana Pacers": "IND",
+  "Los Angeles Clippers": "LAC", "Los Angeles Lakers": "LAL", "Memphis Grizzlies": "MEM", "Miami Heat": "MIA",
+  "Milwaukee Bucks": "MIL", "Minnesota Timberwolves": "MIN", "New Orleans Pelicans": "NOP", "New York Knicks": "NYK",
+  "Oklahoma City Thunder": "OKC", "Orlando Magic": "ORL", "Philadelphia 76ers": "PHI", "Phoenix Suns": "PHX",
+  "Portland Trail Blazers": "POR", "Sacramento Kings": "SAC", "San Antonio Spurs": "SAS", "Toronto Raptors": "TOR",
+  "Utah Jazz": "UTA", "Washington Wizards": "WAS",
+  "Arizona Cardinals": "ARI", "Atlanta Falcons": "ATL", "Baltimore Ravens": "BAL", "Buffalo Bills": "BUF",
+  "Carolina Panthers": "CAR", "Chicago Bears": "CHI", "Cincinnati Bengals": "CIN", "Cleveland Browns": "CLE",
+  "Dallas Cowboys": "DAL", "Denver Broncos": "DEN", "Detroit Lions": "DET", "Green Bay Packers": "GB",
+  "Houston Texans": "HOU", "Indianapolis Colts": "IND", "Jacksonville Jaguars": "JAX", "Kansas City Chiefs": "KC",
+  "Las Vegas Raiders": "LV", "Los Angeles Chargers": "LAC", "Los Angeles Rams": "LAR", "Miami Dolphins": "MIA",
+  "Minnesota Vikings": "MIN", "New England Patriots": "NE", "New Orleans Saints": "NO", "New York Giants": "NYG",
+  "New York Jets": "NYJ", "Philadelphia Eagles": "PHI", "Pittsburgh Steelers": "PIT", "San Francisco 49ers": "SF",
+  "Seattle Seahawks": "SEA", "Tampa Bay Buccaneers": "TB", "Tennessee Titans": "TEN", "Washington Commanders": "WSH",
+  "Arizona Diamondbacks": "ARI", "Atlanta Braves": "ATL", "Baltimore Orioles": "BAL", "Boston Red Sox": "BOS",
+  "Chicago White Sox": "CHW", "Chicago Cubs": "CHC", "Cincinnati Reds": "CIN", "Cleveland Guardians": "CLE",
+  "Colorado Rockies": "COL", "Detroit Tigers": "DET", "Houston Astros": "HOU", "Kansas City Royals": "KC",
+  "Los Angeles Angels": "LAA", "Los Angeles Dodgers": "LAD", "Miami Marlins": "MIA", "Milwaukee Brewers": "MIL",
+  "Minnesota Twins": "MIN", "New York Yankees": "NYY", "New York Mets": "NYM", "Oakland Athletics": "OAK",
+  "Philadelphia Phillies": "PHI", "Pittsburgh Pirates": "PIT", "San Diego Padres": "SD", "San Francisco Giants": "SF",
+  "Seattle Mariners": "SEA", "St. Louis Cardinals": "STL", "Tampa Bay Rays": "TB", "Texas Rangers": "TEX",
+  "Toronto Blue Jays": "TOR", "Washington Nationals": "WSH"
+}
+
+const getLeagueFromTeam = (teamName) => {
+  const code = espnCodeMap[teamName]
+  if (!code) return null
+
+  const nba = ["LAL", "GSW", "NYK", "BOS", "PHX", "DAL", "MIA", "CHI", "CLE"]
+  const nfl = ["DAL", "BUF", "PHI", "NE", "KC", "NYG", "GB", "SF", "MIN"]
+  const mlb = ["NYY", "LAD", "BOS", "ATL", "HOU", "NYM", "CHC", "PHI"]
+
+  if (nba.includes(code)) return "basketball/nba"
+  if (nfl.includes(code)) return "football/nfl"
+  if (mlb.includes(code)) return "baseball/mlb"
+
+  return null
+}
+
+const fetchEspnTeamData = async (teamName) => {
+  teamData.value = null
+  const code = espnCodeMap[teamName]
+  const league = getLeagueFromTeam(teamName)
+
+  if (!code || !league) return
+
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${league}/teams/${code}`)
+    const data = await res.json()
+
+    const logo = data.team?.logos?.[0]?.href
+    const displayName = data.team?.displayName || teamName
+
+    const schedule = (data.team?.nextEvent || []).map((event) => {
+      const opponent = event.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation !== code)
+      return {
+        date: new Date(event.date).toLocaleString(),
+        opponent: opponent?.team?.displayName || 'Unknown'
+      }
+    })
+
+    teamData.value = {
+      displayName,
+      logo,
+      schedule
+    }
+  } catch (err) {
+    console.error('❌ ESPN API error:', err)
+  }
+}
+
+const fetchTeamList = async () => {
+  const user = auth.currentUser
+  if (!user) {
+    router.push('/login')
+    return
+  }
+
+  const userRef = doc(db, 'users', user.uid)
+  const userSnap = await getDoc(userRef)
+
+  if (userSnap.exists()) {
+    const teams = userSnap.data().favoriteTeams || {}
+    teamList.value = Object.values(teams)
+  } else {
+    router.push('/create-profile')
+  }
+}
+
+const goToTeam = (teamName) => {
+  router.push(`/team/${teamName}`)
+}
+
+onMounted(async () => {
+  await fetchTeamList()
+  currentTeam.value = route.params.teamName
+  fetchEspnTeamData(currentTeam.value)
+})
+
+watch(
+  () => route.params.teamName,
+  async (newTeam) => {
+    currentTeam.value = newTeam
+    fetchEspnTeamData(newTeam)
+  },
+  { immediate: true }
+)
+import { updateDoc, arrayUnion } from 'firebase/firestore'
+
+const addFavoriteGame = async (game) => {
+  const user = auth.currentUser
+  if (!user) return alert('Please log in to favorite games.')
+
+  const userRef = doc(db, 'users', user.uid)
+
+  const favorite = {
+    team: currentTeam.value,
+    opponent: game.opponent,
+    date: game.date,
+    favoritedAt: new Date().toISOString()
+  }
+
+  try {
+    await updateDoc(userRef, {
+      favoriteGames: arrayUnion(favorite)
+    })
+    alert('✅ Game added to favorites!')
+  } catch (err) {
+    console.error('❌ Error saving favorite:', err)
+    alert('Failed to favorite game.')
+  }
+}
+
+</script>
+
+
