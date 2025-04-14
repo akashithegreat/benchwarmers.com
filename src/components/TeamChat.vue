@@ -32,61 +32,72 @@
   </template>
   
   <script setup>
-  import { ref, onMounted } from 'vue'
+  import { ref, watch } from 'vue'
   import { auth, db } from '../firebase'
-  import { collection, addDoc, query, orderBy, onSnapshot } from 'firebase/firestore'
-  import { Timestamp } from 'firebase/firestore'
+  import {
+    collection,
+    addDoc,
+    query,
+    orderBy,
+    onSnapshot,
+    serverTimestamp
+  } from 'firebase/firestore'
+  
   const props = defineProps({
     teamName: String
   })
   
-  const newMessage = ref('')
   const messages = ref([])
+  const newMessage = ref('')
+  const activeTeam = ref(props.teamName)
+  
+  watch(() => props.teamName, (newVal) => {
+    activeTeam.value = newVal
+  })
+  
+  let unsubscribe = null
+  
+  const setupChatListener = (teamName) => {
+    if (unsubscribe) unsubscribe()
+  
+    const q = query(
+      collection(db, 'teamChats', teamName, 'messages'),
+      orderBy('createdAt')
+    )
+  
+    unsubscribe = onSnapshot(q, (snapshot) => {
+      messages.value = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.() || new Date()
+      }))
+    })
+  }
+  
+  watch(
+    () => props.teamName,
+    (newTeam) => {
+      console.log('🟢 Switched to chat for', newTeam)
+      setupChatListener(newTeam)
+    },
+    { immediate: true }
+  )
   
   const sendMessage = async () => {
-  if (!newMessage.value.trim()) return
-  const user = auth.currentUser
-  if (!user) return alert('Please log in to chat.')
-
-  try {
-    await addDoc(collection(db, 'teamChats', props.teamName, 'messages'), {
-      text: newMessage.value.trim(),
-      name: user.displayName || 'Anonymous',
-      createdAt: serverTimestamp()
-    })
-    newMessage.value = ''
-  } catch (err) {
-    console.error('❌ Failed to send message:', err)
-  }
-}
+    if (!newMessage.value.trim()) return
+    const user = auth.currentUser
+    if (!user) return alert('Please log in to chat.')
   
-import { watch } from 'vue'
-
-let unsubscribe = null
-
-const setupChatListener = (teamName) => {
-  if (unsubscribe) unsubscribe() // clean old listener
-
-  const q = query(
-    collection(db, 'teamChats', teamName, 'messages'),
-    orderBy('createdAt')
-  )
-
-  unsubscribe = onSnapshot(q, (snapshot) => {
-    messages.value = snapshot.docs.map(doc => ({
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate?.() || new Date()
-    }))
-  })
-}
-
-watch(
-  () => props.teamName,
-  (newTeam) => {
-    console.log('🔄 Switching chat to:', newTeam)
-    setupChatListener(newTeam)
-  },
-  { immediate: true }
-)
-
+    try {
+      await addDoc(collection(db, 'teamChats', activeTeam.value, 'messages'), {
+        text: newMessage.value.trim(),
+        name: user.displayName || 'Anonymous',
+        createdAt: serverTimestamp()
+      })
+      newMessage.value = ''
+    } catch (err) {
+      console.error('❌ Failed to send message:', err)
+    }
+  }
   </script>
+  
+  
